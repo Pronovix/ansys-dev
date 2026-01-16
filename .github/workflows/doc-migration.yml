@@ -1,0 +1,28 @@
+name: Documentation Migration
+
+on:
+  push:
+    branches:
+      - accept
+      - main
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get install -y jq
+
+      - name: Run migration
+        env:
+          DEVPORTAL_CLIENT_ID_ACCEPT: ${{ secrets.DEVPORTAL_CLIENT_ID_ACCEPT }}
+          DEVPORTAL_CLIENT_SECRET_ACCEPT: ${{ secrets.DEVPORTAL_CLIENT_SECRET_ACCEPT }}
+          DEVPORTAL_CLIENT_ID_PROD: ${{ secrets.DEVPORTAL_CLIENT_ID_PROD }}
+          DEVPORTAL_CLIENT_SECRET_PROD: ${{ secrets.DEVPORTAL_CLIENT_SECRET_PROD }}
+        run: |
+          chmod +x .github/scripts/migrate.sh
+          .github/scripts/migrate.sh
