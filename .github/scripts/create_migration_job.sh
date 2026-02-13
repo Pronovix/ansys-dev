@@ -43,7 +43,11 @@ validate_envs() {
     fi
   done
 
-  [[ ${_missing_count} -gt 0 ]] && exit 1
+  if [[ ${_missing_count} -gt 0 ]]; then
+    exit 1
+  fi
+
+  return 0;
 }
 
 ########################################
@@ -342,3 +346,4 @@ main() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   main "$@"
 fi
+
