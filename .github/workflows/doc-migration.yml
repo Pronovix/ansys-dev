@@ -1,0 +1,40 @@
+name: Document Migration
+
+on:
+  push:
+    branches:
+      - test
+
+jobs:
+  migration:
+    name: Run migration
+    runs-on: ubuntu-latest
+    # Double check that the Git reference is a branch.
+    if: github.ref_type == 'branch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Needed for the Bash script to get the list of changed files.
+          fetch-depth: 2
+
+      - name: Set environment context
+        run: |
+          if [[ "${{ github.ref_name }}" == "test" ]]; then
+             echo "TARGET_ENV=Amazee TEST" >> $GITHUB_ENV
+             echo "BASE_URL=${{ vars.BASE_URL_TEST }}" >> $GITHUB_ENV
+             echo "BASIC_AUTH_USERNAME=${{ secrets.BASIC_AUTH_USERNAME_TEST }}" >> $GITHUB_ENV
+             echo "BASIC_AUTH_PASSWORD=${{ secrets.BASIC_AUTH_PASSWORD_TEST }}" >> $GITHUB_ENV
+             echo "CLIENT_ID=${{ secrets.CLIENT_ID_TEST }}" >> $GITHUB_ENV
+             echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET_TEST }}" >> $GITHUB_ENV
+          fi
+
+      - name: Run migration script
+        run: |
+          echo "::group::Environment check"
+          echo "Preparing to run migration script..."
+          echo "Target branch: ${{ github.ref_name }}"
+          echo "Target environment: ${TARGET_ENV}"
+          echo "::endgroup::"
+          bash .github/scripts/create_migration_job.sh
