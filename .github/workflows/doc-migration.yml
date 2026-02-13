@@ -35,6 +35,6 @@ jobs:
           echo "::group::Environment check"
           echo "Preparing to run migration script..."
           echo "Target branch: ${{ github.ref_name }}"
-          echo "Target environment: ${TARGET_ENV}"
+          echo "Target environment: ${{ env.TARGET_ENV }}"
           echo "::endgroup::"
           bash .github/scripts/create_migration_job.sh

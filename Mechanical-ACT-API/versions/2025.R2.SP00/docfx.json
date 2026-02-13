@@ -1,6 +1,7 @@
 {
   "build": {
     "globalMetadata": {
+      "doc_type": "markdown",
       "title": "Mechanical scripting interface",
       "summary": "",
       "version": "2025 R2",

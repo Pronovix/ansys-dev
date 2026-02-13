@@ -20,30 +20,39 @@
 ################################################################################
 
 ########################################
-# Validates that a list of environment variables are set and non-empty.
+# Validates required environment variables.
 #
 # Globals:
-#   None
+#   BASE_URL - The base URL of the site instance.
+#   CLIENT_ID - The OAuth client ID.
+#   CLIENT_SECRET - The OAuth client secret.
 # Arguments:
-#   $@ - A list of environment variable names (strings) to validate.
+#   None.
 # Outputs:
-#   Writes GitHub Action error annotations (::error::) to stderr if variables
-#   are missing.
+#   STDERR: Prints errors if variables are missing or invalid.
 # Returns:
-#   0 if all variables are present.
-#   Exits script with status 1 if any variables are missing.
+#   0 if all variables are present and valid.
+#   Exits script with status 1 if any variables are missing or invalid.
 ########################################
 validate_envs() {
-  local _missing_count=0
+  local _required_vars=("BASE_URL" "CLIENT_ID" "CLIENT_SECRET")
+  local _error_count=0
 
-  for ev_var in "$@"; do
-    if [[ -z "${!ev_var:-}" ]]; then
-      echo "::error title=Missing environment variable::The required variable [${ev_var}] is not set." >&2
-      ((_missing_count++))
+  for ev_var in "${_required_vars[@]}"; do
+    local _value="${!ev_var:-}"
+
+    if [[ -z "${_value}" ]]; then
+      echo "::error title=Missing variable::The required variable [${ev_var}] is not set." >&2
+      ((_error_count++))
+      continue
+    fi
+    if [[ "$ev_var" == "BASE_URL" && "${_value}" == */ ]]; then
+      echo "::error title=Invalid BASE_URL::The BASE_URL must not end with a trailing slash." >&2
+      ((_error_count++))
     fi
   done
 
-  if [[ ${_missing_count} -gt 0 ]]; then
+  if [[ ${_error_count} -gt 0 ]]; then
     exit 1
   fi
 
@@ -66,13 +75,15 @@ validate_envs() {
 #   $4 - (Nameref) To be updated with 'version' from metadata.
 #   $5 - (Nameref) To be updated with 'physics' from metadata.
 # Outputs:
-#   Writes GitHub Action error annotations (::error::) to stderr on failure.
+#   STDERR: Prints error messages on any failure.
+#   STDOUT: Prints status messages about the action steps.
 # Returns:
-#   0 if metadata is successfully extracted or no changes are detected.
-#   1 if multiple product versions are found, docfx.json is missing, or
+#   0 if metadata is valid and successfully extracted.
+#   1 if multiple product changes are detected, docfx.json is missing, or
 #     metadata is invalid.
+#   2 if no product documentation changes are detected.
 ########################################
-extract_metadata_from_docfx_json() {
+extract_product_documentation_metadata() {
   local -n _ref_source_path=$1
   local -n _ref_doc_type=$2
   local -n _ref_title=$3
@@ -82,22 +93,26 @@ extract_metadata_from_docfx_json() {
   # Identify affected product version directories.
   local _version_dir_regex='^[^/]+/versions/[0-9]{4}\.R[0-9]{1}\.SP[0-9]{2}'
   local _version_dirs
-  _version_dirs=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -oP "${_version_dir_regex}" | sort -u)
+  _version_dirs=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -oP "${_version_dir_regex}" | sort -u || true)
+
+  if [[ -z "${_version_dirs}" ]]; then
+    echo "No product documentation changes detected. Exiting."
+    return 2
+  fi
 
   # Check how many version directories are found.
   local _version_dir_count
-  _version_dir_count=$(echo "${_version_dirs}" | grep -c '^' || echo 0)
-  if [ "${_version_dir_count}" -eq 0 ]; then
-    # No product documentation changes are detected.
-    return 0
-  fi
+  _version_dir_count=$(echo "${_version_dirs}" | wc -l)
   if [ "${_version_dir_count}" -gt 1 ]; then
-    echo "::error::Multiple product versions detected: $(echo ${_version_dirs} | xargs)." >&2
+    local _version_dir_list
+    _version_dir_list=$(echo "${_version_dirs}" | xargs -d '\n')
+    echo "::error::Multiple product documentation changes detected: ${_version_dir_list}." >&2
     return 1
   fi
 
   # The product documentation's source path.
   _ref_source_path="${_version_dirs}"
+  echo "Product documentation changes detected in ${_ref_source_path}"
 
   # Locate docfx.json.
   local _docfx_path="${_ref_source_path}/docfx.json"
@@ -106,11 +121,15 @@ extract_metadata_from_docfx_json() {
     return 1
   fi
 
+  echo "Found docfx.json at ${_docfx_path}"
+  echo "Validating metadata in ${_docfx_path}"
+
   # Validate and extract metadata properties from docfx.json.
   local _docfx_errors=()
   local _docfx_properties=("doc_type" "title" "version" "physics")
   for prop in "${_docfx_properties[@]}"; do
-    local _value=$(jq -r ".build.globalMetadata.${prop} // empty" "${_docfx_path}")
+    local _value
+    _value=$(jq -r ".build.globalMetadata.${prop} // empty" "${_docfx_path}")
     if [ -z "${_value}" ]; then
       _docfx_errors+=("'${prop}' is missing or empty")
     else
@@ -122,8 +141,9 @@ extract_metadata_from_docfx_json() {
   done
 
   if [ ${#_docfx_errors[@]} -ne 0 ]; then
-    local _error_msg=$(IFS='; '; echo "${_docfx_errors[*]}")
-    echo "::error::docfx.json validation failed in ${_docfx_path}: $error_msg" >&2
+    local _error_msg
+    _error_msg=$(IFS='; '; echo "${_docfx_errors[*]}")
+    echo "::error::Metadata validation failed in ${_docfx_path}: ${_error_msg}" >&2
     return 1
   fi
 
@@ -140,7 +160,7 @@ extract_metadata_from_docfx_json() {
 #   BASIC_AUTH_USERNAME - (Optional) Username for basic auth.
 #   BASIC_AUTH_PASSWORD - (Optional) Password for basic auth.
 # Arguments:
-#   None
+#   None.
 # Outputs:
 #   STDOUT: Prints the raw access_token string on success.
 #   STDERR: Prints GitHub Action masks (::add-mask::) and errors.
@@ -214,7 +234,7 @@ get_access_token() {
 #   $5 - Version of the product.
 #   $6 - Physics tag.
 # Outputs:
-#   Writes a GitHub Action error annotation to stderr if the job creation fails.
+#    STDERR: Prints an error message if job creation fails.
 # Returns:
 #   0 on success (HTTP 201).
 #   1 if the API returns a non-201 status code.
@@ -288,7 +308,7 @@ create_migration_job() {
 #
 # Workflow:
 #  1. Validates required environment variables.
-#  2. Extracts product metadata from Git changes and docfx.json.
+#  2. Extracts product documentation metadata from Git changes and docfx.json.
 #  3. Requests an OAuth2 access token.
 #  4. Submits a migration job to the Developer poral.
 #
@@ -298,30 +318,39 @@ create_migration_job() {
 #   $@ - Command line arguments passed to the script.
 # Returns:
 #   0 if the migration job creation is successful.
+#   Exits with 0 if no product documentation changes are detected.
 #   Exits with 1 on any validation or execution failure.
 ########################################
 main() {
   set -euo pipefail
 
   echo "Validating environment variables..."
-  validate_envs BASE_URL CLIENT_ID CLIENT_SECRET
+  validate_envs
 
   echo "Detecting product documentation changes..."
-  extract_metadata_from_docfx_json \
+  local _return_code=0
+  extract_product_documentation_metadata \
     _source_path \
     _doc_type \
     _product_name \
     _product_version \
-    _physics || exit 1
+    _physics || _return_code=$?
 
-  for var in "${_source_path}" "${_doc_type}" "${_product_name}" "${_product_version}" "${_physics}"; do
-    if [[ -z "$var" ]]; then
-      echo "No changes have been detected. Exiting."
-      exit 0
-    fi
-  done
+  if [[ ${_return_code} -eq 2 ]]; then
+    # No changes detected.
+    exit 0
+  elif [[ ${_return_code} -ne 0 ]]; then
+    # An error occurred.
+    exit 1
+  fi
 
-  echo "Changes have been detected. Found docfx.json in ${_source_path}/docfx.json"
+  echo "::group::Product documentation metadata"
+  echo "Source path: ${_source_path}"
+  echo "Documentation type: ${_doc_type}"
+  echo "Product name: ${_product_name}"
+  echo "Product version: ${_product_version}"
+  echo "Physics: ${_physics}"
+  echo "::endgroup::"
 
   echo "Requesting access token..."
   local _access_token
@@ -329,15 +358,15 @@ main() {
 
   echo "Creating migration job..."
   create_migration_job \
-    ${_access_token} \
-    ${_doc_type} \
-    ${_source_path} \
-    ${_product_name} \
-    ${_product_version} \
-    ${_physics} || exit 1
+    "${_access_token}" \
+    "${_doc_type}" \
+    "${_source_path}" \
+    "${_product_name}" \
+    "${_product_version}" \
+    "${_physics}" || exit 1
 
   echo "Migration job has been created successfully."
-  exit 0
+  return 0
 }
 
 ########################################
@@ -346,4 +375,3 @@ main() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   main "$@"
 fi
-
