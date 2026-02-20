@@ -10,4 +10,4 @@ This documentation serves as a subset of the *ACT API Reference Guide*, offering
 
 - [API reference](api/index.md)
 
-Update: Manual edit for testing purposes.
+Update #2: Manual edit for testing purposes.
