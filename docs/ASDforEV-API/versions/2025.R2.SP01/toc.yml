@@ -4,7 +4,7 @@
   href: SEV_API_OSC_protocol.md
 - name: ASDforEV API Messages
   href: SEV_API_SEV_Driving.md
-  items:
+  elements:
   - name: UDP Connection
     href: SEV_API_UDP_connection.md
   - name: Sending Messages to ASDforEV
@@ -12,4 +12,4 @@
   - name: Receiving Messages from ASDforEV
     href: SEV_API_receiving.md
 - name: Changelog
-  href: changelog.md   
+  href: changelog.md
