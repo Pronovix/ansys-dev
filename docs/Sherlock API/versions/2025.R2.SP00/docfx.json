@@ -1,0 +1,15 @@
+{
+    "build": {
+      "globalMetadata": {
+        "doc_type": "markdown",
+        "title": "Sherlock APIs 2025 R2",
+        "summary": "",
+        "version": "2025 R2",
+        "product": "Sherlock",
+        "status": "Published",
+        "programming-language": "Python",
+        "product-collection": "Structures",
+        "physics": "Structures"
+      }
+    }
+ }
