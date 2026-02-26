@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Sensors",
-    "description":"[EDIT] The Sensors REST API allows you to manage your Sensors Library, create new sensor assets or update existing ones, and download sensor assets as files.",
+    "description":"(EDIT #2) The Sensors REST API allows you to manage your Sensors Library, create new sensor assets or update existing ones, and download sensor assets as files.",
     "version": "v7"
   },
   "paths": {
