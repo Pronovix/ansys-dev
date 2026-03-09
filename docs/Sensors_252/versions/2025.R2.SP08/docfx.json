@@ -1,7 +1,7 @@
 {
   "build": {
     "globalMetadata": {
-      "doc_type": "res_api",
+      "doc_type": "rest_api",
       "product": "AVxcelerate Sensors",
       "physics": "Autonomous Vehicle Simulation"
     }
