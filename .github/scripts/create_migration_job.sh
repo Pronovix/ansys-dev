@@ -155,6 +155,7 @@ extract_product_documentation_metadata() {
 
   # Collect metadata for Markdown type migration.
   if [[ "${_doc_type}" == "markdown" ]]; then
+    echo "Identified documentation type: Markdown (markdown)"
     local _return_code=0
     get_metadata_for_markdown_migration \
       "${_docfx_path}" \
@@ -167,6 +168,7 @@ extract_product_documentation_metadata() {
     fi
   # Collect metadata for REST API type migration.
   elif [[ "${_doc_type}" == "rest_api" ]]; then
+    echo "Identified documentation type: REST API (rest_api)"
     local _return_code=0
     get_metadata_for_rest_api_migration \
       "${_ref_source_path}" \
@@ -174,6 +176,8 @@ extract_product_documentation_metadata() {
       _ref_product_name \
       _ref_product_version \
       _ref_physics || _return_code=$?
+
+    echo "DEBUG: get_metadata_for_rest_api_migration returned ${_return_code}"
 
     if [[ ${_return_code} -ne 0 ]]; then
       return 1
@@ -255,8 +259,8 @@ get_metadata_for_markdown_migration() {
 #   1 if metadata is invalid.
 ########################################
 get_metadata_for_rest_api_migration() {
-  local _source_path="$1"
-  local _docfx_path="$2"
+  local _source_path=$1
+  local _docfx_path=$2
   local -n _r_product=$3
   local -n _r_version=$4
   local -n _r_physics=$5
