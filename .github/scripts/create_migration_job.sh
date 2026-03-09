@@ -146,7 +146,7 @@ extract_product_documentation_metadata() {
 
   # Check the doc_type metadata property in docfx.json.
   local _doc_type
-  _doc_type=$(jq -r ".build.globalMetadata.${prop} // empty" "${_docfx_path}")
+  _doc_type=$(jq -r ".build.globalMetadata.doc_type // empty" "${_docfx_path}")
   # If doc_type is not specified, fall back to a default value.
   if [[ -z "${_doc_type}" ]]; then
     echo "Metadata doc_type is not specified or it's empty. Using '${DEFAULT_DOC_TYPE}' as a default value."
@@ -205,10 +205,10 @@ extract_product_documentation_metadata() {
 #   1 if metadata is invalid.
 ########################################
 get_metadata_for_markdown_migration() {
-  local _docfx_path="$1"
-  local -n _ref_title=$2
-  local -n _ref_version=$3
-  local -n _ref_physics=$4
+  local _docfx_path=$1
+  local -n _r_title=$2
+  local -n _r_version=$3
+  local -n _r_physics=$4
 
   local _docfx_errors=()
   local _docfx_properties=("title" "version" "physics")
@@ -220,7 +220,7 @@ get_metadata_for_markdown_migration() {
       _docfx_errors+=("'${prop}' is missing or empty")
     else
       # Create a reference to the target variable and assign the value.
-      declare -n target_var="_ref_${prop}"
+      declare -n target_var="_r_${prop}"
       target_var="${_value}"
       unset -n target_var
     fi
@@ -257,9 +257,9 @@ get_metadata_for_markdown_migration() {
 get_metadata_for_rest_api_migration() {
   local _source_path="$1"
   local _docfx_path="$2"
-  local -n _ref_product=$3
-  local -n _ref_version=$4
-  local -n _ref_physics=$5
+  local -n _r_product=$3
+  local -n _r_version=$4
+  local -n _r_physics=$5
 
   # Extract product name and physics from docfx.json.
   local _docfx_errors=()
@@ -271,7 +271,7 @@ get_metadata_for_rest_api_migration() {
     if [ -z "${_value}" ]; then
       _docfx_errors+=("'${prop}' is missing or empty")
     else
-      declare -n target_var="_ref_${prop}"
+      declare -n target_var="_r_${prop}"
       target_var="${_value}"
       unset -n target_var
     fi
@@ -312,9 +312,9 @@ get_metadata_for_rest_api_migration() {
   echo "Found REST API specification at ${_api_spec_files[0]}"
   echo "Validating REST API specification in ${_api_spec_files[0]}"
 
-  _ref_version=$(yq -r ".info.version // empty" "${_api_spec_files[0]}")
+  _r_version=$(yq -r ".info.version // empty" "${_api_spec_files[0]}")
   # Make sure that version is specified.
-  if [ -z "${_ref_version}" ]; then
+  if [ -z "${_r_version}" ]; then
     echo "::error::Missing or empty 'version' in REST API specification ${_api_spec_files[0]}" >&2
     return 1
   fi
