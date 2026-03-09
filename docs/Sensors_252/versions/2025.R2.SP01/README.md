@@ -1,3 +1,3 @@
-# Example README
+# REST API documentation
 
-An example README for testing purposes.
+A valid documentation package.

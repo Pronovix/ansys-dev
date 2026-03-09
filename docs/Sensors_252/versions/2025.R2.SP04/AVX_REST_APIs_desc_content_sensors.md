@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Sensors REST API allows you to manage your Sensor Library.
+[EDIT #1] The Sensors REST API allows you to manage your Sensor Library.
 
 This API offers the same capabilities as the Sensor Modeler section of the Sensor Labs desktop application, namely:
 
