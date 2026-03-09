@@ -309,13 +309,16 @@ get_metadata_for_rest_api_migration() {
     return 1
   fi
 
-  echo "Found REST API specification at ${_api_spec_files[0]}"
-  echo "Validating REST API specification in ${_api_spec_files[0]}"
+  local _api_spec_full_path="${_api_spec_files[0]}"
+  local _api_spec_path="${_api_spec_full_path#"${GITHUB_WORKSPACE}/"}"
 
-  _r_version=$(yq -r ".info.version // empty" "${_api_spec_files[0]}")
+  echo "Found REST API specification at ${_api_spec_path}"
+  echo "Validating REST API specification in ${_api_spec_path}"
+
+  _r_version=$(yq -r '.info.version | select(. != null)' "${_api_spec_full_path}")
   # Make sure that version is specified.
   if [ -z "${_r_version}" ]; then
-    echo "::error::Missing or empty 'version' in REST API specification ${_api_spec_files[0]}" >&2
+    echo "::error::Missing or empty 'version' in REST API specification ${_api_spec_path}" >&2
     return 1
   fi
 

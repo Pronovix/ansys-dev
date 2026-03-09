@@ -1,6 +1,6 @@
 # Changelog
 
-[Edit #2] This file lists the changes introduced in the Sensor API v7, released in 2025 R2, compared to v6, released in 2025 R1.
+[Edit #3] This file lists the changes introduced in the Sensor API v7, released in 2025 R2, compared to v6, released in 2025 R1.
 
 **Important note**
 
