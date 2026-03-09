@@ -2,7 +2,7 @@
   "build": {
     "globalMetadata": {
       "doc_type": "rest_api",
-      "product": "AVxcelerate Sensors",
+      "product": "AVxcelerate Sensors"
     }
   }
 }
