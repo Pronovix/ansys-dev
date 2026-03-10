@@ -137,7 +137,7 @@ extract_product_documentation_metadata() {
   # Locate docfx.json.
   local _docfx_path="${_ref_source_path}/docfx.json"
   if [ ! -f "${_docfx_path}" ]; then
-    echo "::error::No docfx.json file found in ${_docfx_path}." >&2
+    echo "::error::No docfx.json file found in ${_docfx_path}" >&2
     return 1
   fi
 
@@ -155,7 +155,7 @@ extract_product_documentation_metadata() {
 
   # Collect metadata for Markdown type migration.
   if [[ "${_doc_type}" == "markdown" ]]; then
-    echo "Identified documentation type: Markdown (markdown)"
+    echo "Identified documentation type: Markdown (markdown)."
     local _return_code=0
     get_metadata_for_markdown_migration \
       "${_docfx_path}" \
@@ -168,7 +168,7 @@ extract_product_documentation_metadata() {
     fi
   # Collect metadata for REST API type migration.
   elif [[ "${_doc_type}" == "rest_api" ]]; then
-    echo "Identified documentation type: REST API (rest_api)"
+    echo "Identified documentation type: REST API (rest_api)."
     local _return_code=0
     get_metadata_for_rest_api_migration \
       "${_ref_source_path}" \
@@ -177,9 +177,12 @@ extract_product_documentation_metadata() {
       _ref_product_version \
       _ref_physics || _return_code=$?
 
-    echo "DEBUG: get_metadata_for_rest_api_migration returned ${_return_code}"
+    echo ">Product name: ${_ref_product_name}"
+    echo ">Product version: ${_ref_product_version}"
+    echo ">Physics: ${_ref_physics}"
 
     if [[ ${_return_code} -ne 0 ]]; then
+      echo "_return_code is not 0"
       return 1
     fi
   else
@@ -187,6 +190,7 @@ extract_product_documentation_metadata() {
     return 1
   fi
 
+  echo "_ref_doc_type=${_doc_type}"
   _ref_doc_type="${_doc_type}"
 
   return 0
@@ -221,7 +225,7 @@ get_metadata_for_markdown_migration() {
     _value=$(jq -r ".build.globalMetadata.${prop} // empty" "${_docfx_path}")
     # Make sure that the property value is not empty.
     if [ -z "${_value}" ]; then
-      _docfx_errors+=("'${prop}' is missing or empty")
+      _docfx_errors+=("'${prop}' is missing or empty.")
     else
       # Create a reference to the target variable and assign the value.
       declare -n target_var="_r_${prop}"
@@ -273,7 +277,7 @@ get_metadata_for_rest_api_migration() {
     _value=$(jq -r ".build.globalMetadata.${prop} // empty" "${_docfx_path}")
     # Make sure that the property value is not empty.
     if [ -z "${_value}" ]; then
-      _docfx_errors+=("'${prop}' is missing or empty")
+      _docfx_errors+=("'${prop}' is missing or empty.")
     else
       declare -n target_var="_r_${prop}"
       target_var="${_value}"
@@ -322,7 +326,7 @@ get_metadata_for_rest_api_migration() {
   _r_version=$(yq -r '.info.version | select(. != null)' "${_api_spec_full_path}")
   # Make sure that version is specified.
   if [ -z "${_r_version}" ]; then
-    echo "::error::Missing or empty 'version' in REST API specification ${_api_spec_path}" >&2
+    echo "::error::Missing or empty 'info.version' in REST API specification ${_api_spec_path}" >&2
     return 1
   fi
 
