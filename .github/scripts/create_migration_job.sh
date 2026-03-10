@@ -104,7 +104,7 @@ validate_envs() {
 #     metadata is invalid.
 #   2 if no product documentation changes are detected.
 ########################################
-extract_product_documentation_metadata() {
+get_product_documentation_metadata() {
   local -n _ref_source_path=$1
   local -n _ref_doc_type=$2
   local -n _ref_product_name=$3
@@ -177,12 +177,7 @@ extract_product_documentation_metadata() {
       _ref_product_version \
       _ref_physics || _return_code=$?
 
-    echo ">Product name: ${_ref_product_name}"
-    echo ">Product version: ${_ref_product_version}"
-    echo ">Physics: ${_ref_physics}"
-
     if [[ ${_return_code} -ne 0 ]]; then
-      echo "_return_code is not 0"
       return 1
     fi
   else
@@ -190,7 +185,6 @@ extract_product_documentation_metadata() {
     return 1
   fi
 
-  echo "_ref_doc_type=${_doc_type}"
   _ref_doc_type="${_doc_type}"
 
   return 0
@@ -512,7 +506,8 @@ main() {
 
   echo "Detecting product documentation changes..."
   local _return_code=0
-  extract_product_documentation_metadata \
+  local _source_path _doc_type _product_name _product_version _physics
+  get_product_documentation_metadata \
     _source_path \
     _doc_type \
     _product_name \
