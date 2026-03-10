@@ -145,16 +145,16 @@ get_product_documentation_metadata() {
   echo "Validating metadata in ${_docfx_path}"
 
   # Check the doc_type metadata property in docfx.json.
-  local _doc_type
-  _doc_type=$(jq -r ".build.globalMetadata.doc_type // empty" "${_docfx_path}")
+  local _doc_type_value
+  _doc_type_value=$(jq -r ".build.globalMetadata.doc_type // empty" "${_docfx_path}")
   # If doc_type is not specified, fall back to a default value.
-  if [[ -z "${_doc_type}" ]]; then
+  if [[ -z "${_doc_type_value}" ]]; then
     echo "Metadata doc_type is not specified or it's empty. Using '${DEFAULT_DOC_TYPE}' as a default value."
-    _doc_type="${DEFAULT_DOC_TYPE}"
+    _doc_type_value="${DEFAULT_DOC_TYPE}"
   fi
 
   # Collect metadata for Markdown type migration.
-  if [[ "${_doc_type}" == "markdown" ]]; then
+  if [[ "${_doc_type_value}" == "markdown" ]]; then
     echo "Identified documentation type: Markdown (markdown)."
     local _return_code=0
     get_metadata_for_markdown_migration \
@@ -167,7 +167,7 @@ get_product_documentation_metadata() {
       return 1
     fi
   # Collect metadata for REST API type migration.
-  elif [[ "${_doc_type}" == "rest_api" ]]; then
+  elif [[ "${_doc_type_value}" == "rest_api" ]]; then
     echo "Identified documentation type: REST API (rest_api)."
     local _return_code=0
     get_metadata_for_rest_api_migration \
@@ -181,11 +181,11 @@ get_product_documentation_metadata() {
       return 1
     fi
   else
-    echo "::error::Metadata validation failed in ${_docfx_path}: unknown doc_type '${_doc_type}'" >&2
+    echo "::error::Metadata validation failed in ${_docfx_path}: unknown doc_type '${_doc_type_value}'" >&2
     return 1
   fi
 
-  _ref_doc_type="${_doc_type}"
+  _ref_doc_type="${_doc_type_value}"
 
   return 0
 }
