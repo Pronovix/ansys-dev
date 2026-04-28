@@ -1,5 +1,5 @@
 ---
-category: composite
+category: [composite, core]
 plugin: composite
 license: None
 ---
